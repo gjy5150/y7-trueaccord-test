@@ -1,4 +1,6 @@
-package trueaccord.model;
+package trueaccord.debts.model;
+
+import java.io.Serializable;
 
 /**
  * 
@@ -8,7 +10,7 @@ package trueaccord.model;
  * @author gjy5150
  * 
  */
-public class Debts {
+public class Debts implements Serializable {
     
     private Integer id;
     private Double amount;

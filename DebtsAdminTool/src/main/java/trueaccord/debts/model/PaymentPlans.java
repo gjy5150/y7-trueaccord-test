@@ -1,4 +1,6 @@
-package trueaccord.model;
+package trueaccord.debts.model;
+
+import java.io.Serializable;
 
 /**
  * Class that represents the Payment Plans Table
@@ -7,7 +9,7 @@ package trueaccord.model;
  * 
  * @author gjy5150
  */
-public class PaymentPlans {
+public class PaymentPlans implements Serializable {
     
     private Integer id;
     private Integer debt_id;
