@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -18,6 +20,7 @@ import trueaccord.debts.model.Debts;
 import trueaccord.debts.model.PaymentPlans;
 import trueaccord.debts.repository.DatabaseApiUtils;
 import trueaccord.debts.dto.DebtOutput;
+import trueaccord.debts.dto.MessageOutput;
 import trueaccord.debts.model.Payments;
 
 /**
@@ -32,9 +35,10 @@ public class DebtsService implements Serializable {
     private static final long serialVersionUID = -1L;
 
     /**
-     * This method retrieves all information related to the debts and returns the data as a list of DebtInformation objects.
-     * 
-     * @return List<DebtInfortion>
+     * This method retrieves all information related to the debts and returns
+     * the data as a list of DebtOutput objects.
+     *
+     * @return List<DebtOutput>
      */
     public List<DebtOutput> retrieveAllDebts() {
 
@@ -50,7 +54,7 @@ public class DebtsService implements Serializable {
 
                 for (Debts debt : debtLst) {
                     //Build the debt output object to add to the list
-                    retLst.add(this.buildDebtOutputObject(debt, paymentPlanLst, paymentLst));
+                    retLst.add(this.buildDebtOutput(debt, paymentPlanLst, paymentLst));
                 }
             }
 
@@ -61,10 +65,10 @@ public class DebtsService implements Serializable {
         return retLst;
     }
 
-     /**
+    /**
      * This method retrieves all the information related to a single debt .
-     * 
-     * @return DebtInformation
+     *
+     * @return DebtOutput
      */
     public DebtOutput retrieveSingleDebt(Integer debtId) {
 
@@ -79,10 +83,10 @@ public class DebtsService implements Serializable {
                 List<Payments> paymentLst = DatabaseApiUtils.retrievePayments();
 
                 for (Debts debt : debtLst) {
-                    
+
                     if (debt.getId().equals(debtId)) {
                         //Build the debt information object 
-                        retObj = this.buildDebtOutputObject(debt, paymentPlanLst, paymentLst);
+                        retObj = this.buildDebtOutput(debt, paymentPlanLst, paymentLst);
                         break;
                     }
                 }
@@ -94,18 +98,23 @@ public class DebtsService implements Serializable {
 
         return retObj;
     }
-    
+
     /**
-     * This method builds the debt output object with the remaining payment and next payment due date.
+     * This method contains all the necessary logic to build the debt output
+     * object including the following calculations:
+     *
+     * 1.) Has Payment Plan Check. 2.) Remaining Amount Calculation. 3.) Next
+     * Payment Due Date Calculation.
+     *
      * @param debt
      * @param paymentPlanLst
      * @param paymentLst
      * @return DebtOutput
      */
-    private DebtOutput buildDebtOutputObject(Debts debt, List<PaymentPlans> paymentPlanLst, List<Payments> paymentLst) {
-        
+    private DebtOutput buildDebtOutput(Debts debt, List<PaymentPlans> paymentPlanLst, List<Payments> paymentLst) {
+
         DebtOutput retObj = new DebtOutput();
-        
+
         try {
 
             boolean hasPaymentPlan = false;
@@ -118,7 +127,7 @@ public class DebtsService implements Serializable {
 
             paymentPlan = this.retrievePaymentPlanId(debt.getId(), paymentPlanLst);
 
-            //Determine is a debt has an associated payment plan
+            //Determine if a debt has an associated payment plan
             hasPaymentPlan = paymentPlan == null ? false : true;
 
             retObj.setIs_in_payment_plan(hasPaymentPlan);
@@ -129,10 +138,11 @@ public class DebtsService implements Serializable {
             retObj.setRemaining_amount(this.calculateRemainingDebt(paymentPlanId, remainingDebtAmt, paymentLst));
 
             if (paymentPlan != null && retObj.getRemaining_amount() > 0D) {
+                //Calculation the next payment due date
                 retObj.setNext_payment_due_date(this.calculateNextPaymentDueDate(paymentPlanId, paymentPlan, paymentLst));
             }
         } catch (Exception e) {
-
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "buildDebtOutput - " + e.getMessage(), e);
         }
 
         return retObj;
@@ -223,7 +233,7 @@ public class DebtsService implements Serializable {
         try {
 
             //ISO 8601 UTC date formart -e.g. 2020-09-28T16:18:30Z
-            DateTimeFormatter dtf1 = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd['T'[HH][:mm][:ss]Z]")
+            DateTimeFormatter dtf1 = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd['T'[HH][:mm][:ss]'Z']")
                     .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
                     .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
                     .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
@@ -255,11 +265,7 @@ public class DebtsService implements Serializable {
                 paymentDueDate = startDate;
             } else {
                 //Calculate the next payment due date
-                if (paymentPlan.getInstallment_frequency().equals(SystemConstants.FREQUENCY_WEEKLY)) {
-                    paymentDueDate = this.calcNextFrequencyDate(startDate, lastPaymentDate, 1);
-                } else if (paymentPlan.getInstallment_frequency().equals(SystemConstants.FREQUENCY_BI_WEEKLY)) {
-                    paymentDueDate = this.calcNextFrequencyDate(startDate, lastPaymentDate, 2);
-                }
+                paymentDueDate = this.calcNextFrequencyDate(startDate, lastPaymentDate, paymentPlan.getInstallment_frequency());
             }
 
             retVal = paymentDueDate.format(dtf1);
@@ -271,23 +277,42 @@ public class DebtsService implements Serializable {
     }
 
     /**
-     * This method calculates the next frequency date based on start date, end date, and weeks to add (e.g. WEEKLY = 1, BI WEEKLY = 2)
+     * This method calculates the next frequency date based on start date
+     * (Payment Plan Start Date) and end date (Last Payment Date), and frequency
+     * (e.g. WEEKLY = 1, BI WEEKLY = 2).
+     *
      * @param startDt
      * @param endDt
-     * @param weeksToAdd
-     * @return 
+     * @param frequency
+     * @return
      */
-    private LocalDateTime calcNextFrequencyDate(LocalDateTime startDt, LocalDateTime endDt, Integer weeksToAdd) {
+    private LocalDateTime calcNextFrequencyDate(LocalDateTime startDt, LocalDateTime endDt, String frequency) {
+
+        //Intialize to start date
         LocalDateTime retDate = startDt;
+
         try {
 
-            //Loop through the frequency dates starting from the payment plan start date and ending before or at the last payment date
-            for (LocalDateTime ldt = startDt; ldt.isBefore(endDt) || ldt.isEqual(endDt); ldt = ldt.plusWeeks(weeksToAdd)) {
-                retDate = ldt;
+            int weeksToAdd = 0;
+            if (frequency.equals(SystemConstants.FREQUENCY_WEEKLY)) {
+                weeksToAdd = 1;
+            } else if (frequency.equals(SystemConstants.FREQUENCY_BI_WEEKLY)) {
+                weeksToAdd = 2;
             }
 
-            //Calculation the next frequency date
-            retDate = retDate.plusWeeks(weeksToAdd);
+            if (weeksToAdd > 0) {
+                //Loop through from start from the payment plan start date to the last payment date to calculate the next frequency date
+                for (retDate = startDt; retDate.isBefore(endDt) || retDate.isEqual(endDt); retDate = retDate.plusWeeks(weeksToAdd));
+            }
+
+            //NOTE: Determine if the last payment was made earlier than the scheduled due date.
+            //For example: For a BI WEEKLY payment schedule starting (2020-01-01), a payment was made on 2020-08-08 which
+            //falls between 2020-07-29 and 2020-08-12 scheduled payment dates.  Therefore, I assume the payment was for the 2020-08-12 
+            //scheduled payment due date.  The next payment will fall to the 2020-08-26 scheduled due date. 
+            if (endDt.isAfter(retDate.minusWeeks(weeksToAdd))) {
+                //Add the next frequency date
+                retDate = retDate.plusWeeks(weeksToAdd);
+            }
 
         } catch (Exception e) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, "calcNextFrequencyDate - " + e.getMessage(), e);
@@ -296,28 +321,54 @@ public class DebtsService implements Serializable {
     }
 
     /**
-     * Main method to test the methods in this class.
+     * Main method to test the methods in this DebtsService class.
      *
      * @param args
      */
     public static void main(String args[]) {
+
         try {
+
+            Integer debtId = 2;
+            MessageOutput msgOut;
             ObjectMapper objMapper = new ObjectMapper();
             DebtsService ds = new DebtsService();
             List<DebtOutput> debtInfoLst = ds.retrieveAllDebts();
-            String jsonStr;
+            String jsonStr = "";
             if (!debtInfoLst.isEmpty()) {
-                
+
                 jsonStr = objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(debtInfoLst);
 
                 System.out.println(jsonStr);
             }
 
             System.out.println("\n---------------------------------------------------------");
-            DebtOutput outObj = ds.retrieveSingleDebt(2);
-            jsonStr = objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outObj);
+            DebtOutput outObj = ds.retrieveSingleDebt(debtId);
+
+            if (outObj.getId() != null) {
+                jsonStr = objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outObj);
+            } else {
+
+                msgOut = new MessageOutput();
+                msgOut.setStatus(MessageOutput.MessageStatus.ERROR);
+                msgOut.setMessage("No data found for debt id: " + debtId);
+                jsonStr = objMapper.writerWithDefaultPrettyPrinter().writeValueAsString(msgOut);
+            }
             System.out.println(jsonStr);
-            
+
+            /* NOTE: Uncomment to display the biweekly payment schedule
+             DateTimeFormatter dtf = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd['T'[HH][:mm][:ss]'Z']")
+                    .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                    .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+                    .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+                    .toFormatter();
+             
+            LocalDateTime startDt = LocalDateTime.of(2020, Month.JANUARY, 01, 0, 0, 0);
+            LocalDateTime endDt = LocalDateTime.of(2020, Month.DECEMBER, 31, 0, 0, 0);
+            for (LocalDateTime ldt = startDt; ldt.isBefore(endDt) || ldt.isEqual(endDt); ldt = ldt.plusWeeks(2)) {
+                System.out.println(dtf.format(ldt));
+            }
+             */
         } catch (Exception e) {
             Logger.getLogger(DebtsService.class.getName()).log(Level.SEVERE, "main - " + e.getMessage(), e);
         }

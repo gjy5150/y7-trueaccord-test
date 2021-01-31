@@ -20,7 +20,7 @@ import trueaccord.debts.model.Payments;
 
 /**
  * This class contains the methods to retrieve debts, payment plans, and
- * payments from the TrueAccord database api service.
+ * payments from the TrueAccord Database API Service.
  *
  * @author gjy5150
  */
@@ -95,7 +95,7 @@ public class DatabaseApiUtils {
 
                 if (javaType != null) {
                     // convert JSON Node to list of payment plan objects
-                    retLst.addAll(objMapper.readValue(root.toString(), javaType));
+                    retLst.addAll(objMapper.readValue(root.toString(), javaType));                   
                 }
 
             }
