@@ -11,6 +11,8 @@ import java.io.Serializable;
  */
 public class Payments implements Serializable {
     
+    private static final long serialVersionUID = -1L;
+    
     private Integer payment_plan_id;
     private Double amount;
     private String date;

@@ -146,8 +146,15 @@ public class DatabaseApiUtils {
         return retLst;
     }
     
+    /**
+     * Main method to test the methods in this class.
+     * 
+     * @param args 
+     */
     public static void main(String args[]) {
         try {
+            
+            System.out.println("Debts:");
             List<Debts> debtList = DatabaseApiUtils.retrieveDebts();
             if (debtList != null && !debtList.isEmpty()) {
                 ObjectMapper objMapper = new ObjectMapper();
@@ -156,6 +163,7 @@ public class DatabaseApiUtils {
                 System.out.println(jsonStr);
             }
             
+            System.out.println("\nPayment Plans:");
             List<PaymentPlans> ppList = DatabaseApiUtils.retrievePaymentPlans();
             if (ppList != null && !ppList.isEmpty()) {
                 ObjectMapper objMapper = new ObjectMapper();
@@ -164,6 +172,7 @@ public class DatabaseApiUtils {
                 System.out.println(jsonStr);
             }
             
+            System.out.println("\nPayments:");
             List<Payments> paymentList = DatabaseApiUtils.retrievePayments();
             if (paymentList != null && !paymentList.isEmpty()) {
                 ObjectMapper objMapper = new ObjectMapper();
@@ -173,7 +182,7 @@ public class DatabaseApiUtils {
             }
             
         } catch (Exception e) {
-            Logger.getLogger(DatabaseApiUtils.class.getName()).log(Level.SEVERE, "man - " + e.getMessage(), e);
+            Logger.getLogger(DatabaseApiUtils.class.getName()).log(Level.SEVERE, "main - " + e.getMessage(), e);
         }
     }
 

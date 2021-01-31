@@ -1,11 +1,15 @@
-package trueaccord.dto;
+package trueaccord.debts.dto;
+
+import java.io.Serializable;
 
 /**
  * Class that represents the debt information for each debt output.
  * 
  * @author gjy5150
  */
-public class DebtInformation {
+public class DebtOutput implements Serializable {
+    
+    private static final long serialVersionUID = -1L;
     
     private Integer id; //Debt Id
     private Double amount; //Debt amount
