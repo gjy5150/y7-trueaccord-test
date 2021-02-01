@@ -26,8 +26,8 @@ gunzip -c foo.tar.gz | tar xopf -
 
 The Debts Admin Tool is a debt monitoring tool that has two main functions.
 
-* List all debts and output as a JSON string.
-* Retrieve a single debt and output as a JSON string.
+* List all debts and output the data as a JSON string.
+* Retrieve a single debt and output data as a JSON string.
 
 ### List All Debts
 
