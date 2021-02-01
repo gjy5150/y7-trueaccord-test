@@ -6,8 +6,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -301,7 +299,7 @@ public class DebtsService implements Serializable {
             }
 
             if (weeksToAdd > 0) {
-                //Loop through from start from the payment plan start date to the last payment date to calculate the next frequency date
+                //Loop through from the payment plan start date to the last payment date to calculate the next frequency date
                 for (retDate = startDt; retDate.isBefore(endDt) || retDate.isEqual(endDt); retDate = retDate.plusWeeks(weeksToAdd));
             }
 
