@@ -1,6 +1,4 @@
-# Project Title
-
-Debt Montoring Admin Tool
+# Debt Montoring Admin Tool
 
 ## Getting Started
 
