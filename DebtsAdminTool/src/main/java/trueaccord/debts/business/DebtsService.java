@@ -308,7 +308,7 @@ public class DebtsService implements Serializable {
             //NOTE: Determine if the last payment was made earlier than the scheduled due date.
             //For example: For a BI WEEKLY payment schedule starting (2020-01-01), a payment was made on 2020-08-08 which
             //falls between 2020-07-29 and 2020-08-12 scheduled payment dates.  Therefore, I assume the payment was for the 2020-08-12 
-            //scheduled payment due date.  The next payment will fall to the 2020-08-26 scheduled due date. 
+            //scheduled payment due date.  Therefore, the next payment will fall to the 2020-08-26 scheduled due date. 
             if (endDt.isAfter(retDate.minusWeeks(weeksToAdd))) {
                 //Add the next frequency date
                 retDate = retDate.plusWeeks(weeksToAdd);
