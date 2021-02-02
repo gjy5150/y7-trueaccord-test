@@ -6,7 +6,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-Java OpenJDK 14 or greater should be intalled on your machine.
+Java OpenJDK 14 or greater should be installed on your machine.
 
 ```
 Go to: https://jdk.java.net/archive/ to download and install.
