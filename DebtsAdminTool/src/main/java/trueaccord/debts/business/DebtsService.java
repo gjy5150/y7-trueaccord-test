@@ -201,7 +201,7 @@ public class DebtsService implements Serializable {
                     }
                 }
 
-                //Rounding remaining amount to 2 decimal places
+                //Rounding remaining amount to 3 decimal places.
                 retAmt = retAmt.subtract(totPaidAmt).setScale(SystemConstants.NUMBER_DECIMALS, RoundingMode.HALF_UP);
 
                 if (retAmt.doubleValue() < 0D) {
