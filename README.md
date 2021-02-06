@@ -14,11 +14,7 @@ Go to: https://jdk.java.net/archive/ to download and install.
 
 ### Installing
 
-Download the file DebtsAdminTool.tar.gz and unpack the DebtAdminTool.jar file.
-
-```
-gunzip -c foo.tar.gz | tar xopf -
-```
+Download the file DebtsAdminTool.jar file to your local machine.
 
 ## Running the tests
 
