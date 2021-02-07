@@ -91,6 +91,7 @@ java -jar DebtsAdminTool.jar 2
 ## Assumptions
 
 * The remaining_amount calculation is rounded up to 3 decimal places.
+* The remaining_amount calculation is calculated using the amount_to_pay on the payment plan as the balance to pay off.  If there is no payment plan then the amount from the debt is used as the remaining_amount.
 * When calculating the next payment due date I determine if the last payment was made earlier than the scheduled due date.  For example: For a BI WEEKLY payment schedule starting 2020-01-01, a payment was made on 2020-08-08 which falls between 2020-07-29 and 2020-08-12 scheduled payment dates.  Therefore, I assume the payment was for the 2020-08-12 scheduled payment due date.  Therefore, the next payment will fall to the 2020-08-26 scheduled due date.
 * If the time portion is not available in the start_date then I default to T00:00:00Z when calculating the next payment due date.
 
